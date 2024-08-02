@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  postgres_bot:
+    image: postgres:16
+    container_name: postgres_bot
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data:rw
+
+
+  bot:
+    build:
+        context: .
+        dockerfile: Dockerfile
+    container_name: bot
+    restart: unless-stopped
+    depends_on:
+      - postgres_bot
+    env_file:
+      - .env
+    volumes:
+      - ./alembic:/opt/app/alembic:rw
+      - ./app:/opt/app/app:rw

@@ -1,0 +1,8 @@
+# Example of .env file
+BOT_TOKEN=your_bot_token
+GROUP_ID=-your_group_id
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_HOST=postgres_bot
+POSTGRES_PORT=5432
+POSTGRES_DB=postgres
