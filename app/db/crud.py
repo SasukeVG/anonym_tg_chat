@@ -2,7 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from app.db.models import User, Message, Vote, VoteType
-from datetime import datetime
+from app.db.database import connection_url
+from datetime import datetime, timedelta
+import asyncpg
 
 
 async def add_user(session: AsyncSession, username: str, user_id: int, name: str, surname: str):
@@ -106,3 +108,34 @@ async def add_vote(session: AsyncSession, user_id: int, message_id: int, vote_ty
         await session.rollback()
         print(f"Ошибка при добавлении голоса: {e}")
         return False
+
+
+async def can_send_message(user_id: int, timeout_seconds: int = 10) -> bool:
+    try:
+        # Создаем подключение к базе данных
+        conn = await asyncpg.connect(connection_url)
+
+        # Выполняем сырой SQL-запрос
+        result = await conn.fetchrow("""
+            SELECT date 
+            FROM messages 
+            WHERE author_id = $1
+            ORDER BY date DESC
+            LIMIT 1
+        """, user_id)
+
+        # Закрываем подключение
+        await conn.close()
+
+        # Извлекаем дату последнего сообщения
+        last_message_time = result['date'] if result else None
+
+        if last_message_time and datetime.now() - last_message_time < timedelta(seconds=timeout_seconds):
+            return False
+
+        return True
+
+    except Exception as e:
+        # Обрабатываем любые ошибки, например, если данных нет
+        print(f"Ошибка при проверке времени последнего сообщения: {e}")
+        return True  # Разрешаем отправку сообщения, если произошла ошибка
