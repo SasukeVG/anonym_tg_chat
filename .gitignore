@@ -36,6 +36,7 @@ env.bck/
 venv.bak/
 venv.bck/
 .virtualenv/
+venv_new/
 pip-selfcheck.json
 
 # Test files / coverage reports
