@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, UniqueConstraint, BigInteger
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 import enum
@@ -13,8 +13,8 @@ class Message(Base):
     __tablename__ = 'messages'
 
     id = Column(Integer, primary_key=True, index=True)
-    message_id = Column(Integer, unique=True, index=True)
-    author_id = Column(Integer, ForeignKey('users.user_id'))
+    message_id = Column(BigInteger, unique=True, index=True)
+    author_id = Column(BigInteger, ForeignKey('users.user_id'))
     text = Column(String)
     date = Column(DateTime)
     positive_votes = Column(Integer, default=0)
@@ -29,7 +29,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, index=True, nullable=True)
-    user_id = Column(Integer, unique=True, index=True, nullable=False)
+    user_id = Column(BigInteger, unique=True, index=True, nullable=False)
     date = Column(DateTime)
     name = Column(String, nullable=True)
     surname = Column(String, nullable=True)
@@ -42,8 +42,8 @@ class Vote(Base):
     __tablename__ = 'votes'
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.user_id'))
-    message_id = Column(Integer, ForeignKey('messages.message_id'))
+    user_id = Column(BigInteger, ForeignKey('users.user_id'))
+    message_id = Column(BigInteger, ForeignKey('messages.message_id'))
     vote_type = Column(Enum(VoteType), nullable=False)
 
     voter = relationship("User", back_populates="votes")  # Связь с User

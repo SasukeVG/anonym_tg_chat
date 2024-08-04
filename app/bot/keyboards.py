@@ -96,7 +96,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             # Убираем спойлер с фото и кнопки
             if query.message.photo:
                 # Заменяем фото на его версию без спойлера
-                media = InputMediaPhoto(media=query.message.photo[-1].file_id, caption=text_message)
+                media = InputMediaPhoto(media=query.message.photo[-1].file_id, caption="Анонимное фото")
                 await query.edit_message_media(media=media)
             else:
                 # Убираем кнопки у текста
