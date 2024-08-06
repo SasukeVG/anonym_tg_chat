@@ -69,6 +69,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 if await add_vote(session, user_id, message_id, VoteType.negative):
                     await update_negative_votes(session, message_id)
                     negative_votes += 1
+            t = f"Анонимное фото: \n\n👍🏻 {positive_votes} 👎🏻 {negative_votes}"
+            await query.edit_message_caption(caption=t)
+            await query.edit_message_reply_markup(reply_markup=inline_keyboard('photo'))
         else:
             new_text = f"Фото удалено"
             await query.edit_message_caption(caption=new_text)
