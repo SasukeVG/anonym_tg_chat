@@ -1,5 +1,5 @@
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters
-from app.bot.keyboards import button
+from app.bot.buttons import button
 from app.bot.handlers import handle_text_message, handle_photo_message
 from app.bot.commands import start
 import os

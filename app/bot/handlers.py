@@ -14,7 +14,7 @@ group_id = os.getenv("GROUP_ID")
 
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.message and update.message.chat and update.message.chat.type == 'private':
-        user_message = update.message.text
+        user_message = update.message.text.lower()
         user_id = update.message.from_user.id
 
         # Проверяем, может ли пользователь отправить сообщение (антиспам)
@@ -24,27 +24,13 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         # Получаем сессию базы данных
         async with get_db() as session:
-            # Проверяем, существует ли пользователь с данным user_id
-            result = await session.execute(select(User).filter(User.user_id == user_id))
-            user = result.scalars().first()
-
-            # Если пользователь не найден, добавляем его в базу данных
-            if not user:
-                await add_user(
-                    session=session,
-                    username=update.message.from_user.username,
-                    user_id=user_id,
-                    name=update.message.from_user.first_name,
-                    surname=update.message.from_user.last_name
-                )
-
-            # Добавляем сообщение
             message = await context.bot.send_message(
                 chat_id=group_id,
-                text=f"Анонимное сообщение:\n{user_message}",
+                text=f"{user_message}",
                 reply_markup=inline_keyboard('text')
             )
 
+            # Добавляем сообщение
             await add_message(
                 session=session,
                 message_id=message.message_id,
@@ -60,29 +46,15 @@ async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
         # Получаем сессию базы данных
         async with get_db() as session:
-            # Проверяем, существует ли пользователь с данным user_id
-            result = await session.execute(select(User).filter(User.user_id == user_id))
-            user = result.scalars().first()
-
-            # Если пользователь не найден, добавляем его в базу данных
-            if not user:
-                await add_user(
-                    session=session,
-                    username=update.message.from_user.username,
-                    user_id=user_id,
-                    name=update.message.from_user.first_name,
-                    surname=update.message.from_user.last_name
-                )
-
-            # Добавляем сообщение
             message = await context.bot.send_photo(
                 chat_id=group_id,
                 photo=photo,
-                caption="Анонимное фото",
+                caption="Смотрите что нашел!",
                 reply_markup=inline_keyboard('photo'),
                 has_spoiler=True  # Устанавливаем фото как спойлер
             )
 
+            # Добавляем сообщение
             await add_message(
                 session=session,
                 message_id=message.message_id,
