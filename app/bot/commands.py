@@ -19,3 +19,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
     await update.message.reply_text('Привет! Отправь мне сообщение или фото, и я анонимно передам его в группу.')
 
+
+async def get_chat_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Получаем аргументы команды
+    if context.args:
+        chat_id = context.args[0]
+
+        # Вызов функции get_chat
+        try:
+            chat_info = await context.bot.get_chat(chat_id)
+            await update.message.reply_text(f"Chat title: {chat_info}")
+        except Exception as e:
+            await update.message.reply_text(f"An error occurred: {e}")
+    else:
+        await update.message.reply_text("Please provide a chat ID as a parameter.")
