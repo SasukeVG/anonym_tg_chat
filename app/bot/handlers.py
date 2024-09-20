@@ -1,12 +1,12 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from app.bot.keyboards import inline_keyboard
-from app.db.crud import add_message, add_user, can_send_message
+from app.db.crud import add_message, can_send_message, create_thread
 from app.db.database import get_db
-from app.db.models import User
-from sqlalchemy.future import select
-import asyncpg
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 group_id = os.getenv("GROUP_ID")
@@ -37,6 +37,20 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
                 text=user_message,
                 author_id=user_id
             )
+    else:
+        if update.message.from_user.id == 324974672:
+            user = update.message.from_user
+            chat_id = update.message.chat_id
+            thread_id = update.message.message_thread_id
+            message_text = update.message.text
+
+            log_entry = f"User: {user.username} (ID: {user.id}), Chat ID: {chat_id}, Thread ID: {thread_id}, Message: {message_text}"
+            print(log_entry)
+            logger.info(log_entry)
+
+            # Записываем данные в базу данных
+            async with get_db() as session:
+                await create_thread(session, chat_id=chat_id, thread_id=thread_id, title=message_text)
 
 
 async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
