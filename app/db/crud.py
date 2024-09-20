@@ -1,10 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
-from app.db.models import User, Message, Vote, VoteType
+from app.db.models import User, Message, Vote, VoteType, Thread
 from app.db.database import connection_url
 from datetime import datetime, timedelta
 import asyncpg
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def add_user(session: AsyncSession, username: str, user_id: int, name: str, surname: str):
@@ -139,3 +143,19 @@ async def can_send_message(user_id: int, timeout_seconds: int = 10) -> bool:
         # Обрабатываем любые ошибки, например, если данных нет
         print(f"Ошибка при проверке времени последнего сообщения: {e}")
         return True  # Разрешаем отправку сообщения, если произошла ошибка
+
+
+async def create_thread(session: AsyncSession, chat_id: int, thread_id: int, title: str):
+    # Проверка на существование записи
+    result = await session.execute(select(Thread).filter_by(chat_id=chat_id, thread_id=thread_id))
+    existing_thread = result.scalars().first()
+
+    if existing_thread is None:
+        # Если записи нет, создаем новую
+        new_thread = Thread(chat_id=chat_id, thread_id=thread_id, title=title)
+        session.add(new_thread)
+        await session.commit()
+        await session.refresh(new_thread)
+        logger.info(f"New thread created: {new_thread}")
+    else:
+        logger.info(f"Thread already exists: Chat ID {chat_id}, Thread ID {thread_id}")

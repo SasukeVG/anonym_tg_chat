@@ -27,3 +27,6 @@ services:
     volumes:
       - ./alembic:/opt/app/alembic:rw
       - ./app:/opt/app/app:rw
+
+volumes:
+    postgres-data:
