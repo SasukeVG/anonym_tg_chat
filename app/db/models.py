@@ -50,3 +50,13 @@ class Vote(Base):
     message = relationship("Message", back_populates="votes")  # Связь с Message
 
     __table_args__ = (UniqueConstraint('user_id', 'message_id', name='_user_message_uc'),)
+
+
+class Thread(Base):
+    __tablename__ = 'threads'
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    chat_id = Column(BigInteger, nullable=False)
+    thread_id = Column(BigInteger, unique=True, index=True)
+
