@@ -11,6 +11,7 @@ from app.db.crud import (
     add_message, can_send_message, create_thread, frequency_increase,
 )
 
+
 logger = logging.getLogger(__name__)
 
 group_id = os.getenv("GROUP_ID")
@@ -49,6 +50,20 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
                 text=user_message,
                 author_id=user_id
             )
+    else:
+        if update.message.from_user.id == 324974672:
+            user = update.message.from_user
+            chat_id = update.message.chat_id
+            thread_id = update.message.message_thread_id
+            message_text = update.message.text
+
+            log_entry = f"User: {user.username} (ID: {user.id}), Chat ID: {chat_id}, Thread ID: {thread_id}, Message: {message_text}"
+            print(log_entry)
+            logger.info(log_entry)
+
+            # Записываем данные в базу данных
+            async with get_db() as session:
+                await create_thread(session, chat_id=chat_id, thread_id=thread_id, title=message_text)
 
         await start_thread_selection(update, context)
     else:

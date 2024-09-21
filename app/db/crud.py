@@ -160,7 +160,7 @@ async def create_thread(session: AsyncSession, chat_id: int, thread_id: int, tit
     else:
         logger.info(f"Thread already exists: Chat ID {chat_id}, Thread ID {thread_id}")
 
-
+        
 async def frequency_increase(session: AsyncSession, thread_id: int, chat_id: int):
     # Проверка на существование записи
     result = await session.execute(select(Thread).filter_by(chat_id=chat_id, thread_id=thread_id))
@@ -183,3 +183,4 @@ async def get_threads_by_frequency(session: AsyncSession, limit: int, offset: in
         select(Thread).order_by(Thread.frequency.desc()).limit(limit).offset(offset)
     )
     return result.scalars().all()
+
