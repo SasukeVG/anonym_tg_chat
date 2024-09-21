@@ -2,15 +2,16 @@ from telegram.ext import ContextTypes
 from telegram import Update, InputMediaPhoto
 
 from sqlalchemy.future import select
+from sqlalchemy import func
 
-from app.bot.keyboards import inline_keyboard
+from app.bot.keyboards import inline_keyboard, create_pagination_keyboard
 from app.db.database import get_db
-from app.db.models import VoteType, User
+from app.db.models import VoteType, User, Thread
 from app.db.crud import (get_votes_and_text_by_message_id, update_positive_votes,
-                         update_negative_votes, has_user_voted, add_vote, add_user)
+                         update_negative_votes, has_user_voted, add_vote, add_user, get_threads_by_frequency)
 
 
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def vote_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
 
@@ -96,3 +97,29 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             else:
                 # Убираем кнопки у текста
                 await query.edit_message_text(text=text_message)
+
+
+async def threads_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    data = query.data.split(":")
+    action = data[0]
+    value = data[1]
+
+    if action == "select_thread":
+        if value == "none":
+            context.user_data['selected_thread'] = None
+        else:
+            context.user_data['selected_thread'] = int(value)
+        await query.edit_message_text("Топик выбран, теперь можете отправить сообщение.")
+    elif action == "change_page":
+        page = int(value)
+        offset = (page - 1) * 5
+        async with get_db() as session:
+            threads = await get_threads_by_frequency(session, limit=5, offset=offset)
+            total_threads = await session.scalar(select(func.count(Thread.id)))
+            total_pages = (total_threads + 4) // 5
+
+            keyboard = create_pagination_keyboard(threads, current_page=page, total_pages=total_pages)
+            await query.edit_message_reply_markup(reply_markup=keyboard)
