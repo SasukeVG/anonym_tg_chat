@@ -59,4 +59,5 @@ class Thread(Base):
     title = Column(String, nullable=False)
     chat_id = Column(BigInteger, nullable=False)
     thread_id = Column(BigInteger, unique=True, index=True)
+    frequency = Column(Integer, default=0)
 
