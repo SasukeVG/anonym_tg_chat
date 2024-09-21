@@ -5,12 +5,11 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from app.bot.keyboards import inline_keyboard
+from app.bot.commands import start_thread_selection
 from app.db.database import get_db
 from app.db.crud import (
-    add_message,
-    can_send_message,
-    create_thread,
-    frequency_increase)
+    add_message, can_send_message, create_thread, frequency_increase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +26,19 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text('Пожалуйста, подождите 10 секунд перед отправкой следующего сообщения.')
             return
 
+        # Проверяем, выбран ли топик
+        if 'selected_thread' not in context.user_data:
+            await update.message.reply_text('Пожалуйста, сначала выберите топик.')
+            return
+
+        thread_id = context.user_data['selected_thread']
+
         # Получаем сессию базы данных
         async with get_db() as session:
             message = await context.bot.send_message(
                 chat_id=group_id,
                 text=f"{user_message}",
+                reply_to_message_id=thread_id if thread_id else None,
                 reply_markup=inline_keyboard('text')
             )
 
@@ -42,7 +49,10 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
                 text=user_message,
                 author_id=user_id
             )
+
+        await start_thread_selection(update, context)
     else:
+        # Логика для обработки сообщений в группе
         if update.message.from_user.id == 324974672:
             user = update.message.from_user
             chat_id = update.message.chat_id
@@ -69,12 +79,20 @@ async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYP
         photo = update.message.photo[-1].file_id  # Берем фото самого высокого качества
         user_id = update.message.from_user.id
 
+        # Проверяем, выбран ли топик
+        if 'selected_thread' not in context.user_data:
+            await update.message.reply_text('Пожалуйста, сначала выберите топик.')
+            return
+
+        thread_id = context.user_data['selected_thread']
+
         # Получаем сессию базы данных
         async with get_db() as session:
             message = await context.bot.send_photo(
                 chat_id=group_id,
                 photo=photo,
                 caption="Смотрите что нашел!",
+                reply_to_message_id=thread_id if thread_id else None,
                 reply_markup=inline_keyboard('photo'),
                 has_spoiler=True  # Устанавливаем фото как спойлер
             )
@@ -86,3 +104,4 @@ async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 text=f"Фото : {photo}",
                 author_id=user_id
             )
+        await start_thread_selection(update, context)

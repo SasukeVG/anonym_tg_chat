@@ -167,8 +167,19 @@ async def frequency_increase(session: AsyncSession, thread_id: int, chat_id: int
     existing_thread = result.scalars().first()
 
     if existing_thread:
-        existing_thread.frequency += 1
+        if existing_thread.frequency is None:
+            existing_thread.frequency = 1  # Устанавливаем frequency на 1, если было None
+        else:
+            existing_thread.frequency += 1  # Увеличиваем frequency на 1
         await session.commit()
         logger.info(f"Frequency increased for thread: {existing_thread}")
     else:
         logger.info(f"Thread not found: Chat ID {chat_id}, Thread ID {thread_id}")
+
+
+# crud for getting threads by frequency with pagination
+async def get_threads_by_frequency(session: AsyncSession, limit: int, offset: int):
+    result = await session.execute(
+        select(Thread).order_by(Thread.frequency.desc()).limit(limit).offset(offset)
+    )
+    return result.scalars().all()
