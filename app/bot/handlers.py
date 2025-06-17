@@ -23,9 +23,9 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         user_id = update.message.from_user.id
 
         # Проверяем, может ли пользователь отправить сообщение (антиспам)
-        if not await can_send_message(user_id):
-            await update.message.reply_text('Пожалуйста, подождите 10 секунд перед отправкой следующего сообщения.')
-            return
+        # if not await can_send_message(user_id):
+        #     await update.message.reply_text('Пожалуйста, подождите 10 секунд перед отправкой следующего сообщения.')
+        #     return
 
         # Проверяем, выбран ли топик
         if 'selected_thread' not in context.user_data:

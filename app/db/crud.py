@@ -32,7 +32,6 @@ async def add_message(session: AsyncSession, message_id: int, text: str, author_
         new_message = Message(
             message_id=message_id,
             text=text,
-            author_id=author_id,
             date=datetime.now()
         )
         session.add(new_message)

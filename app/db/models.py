@@ -14,13 +14,11 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     message_id = Column(BigInteger, unique=True, index=True)
-    author_id = Column(BigInteger, ForeignKey('users.user_id'))
     text = Column(String)
     date = Column(DateTime)
     positive_votes = Column(Integer, default=0)
     negative_votes = Column(Integer, default=0)
 
-    author = relationship("User", back_populates="messages")
     votes = relationship("Vote", back_populates="message")  # Связь с Vote
 
 
@@ -34,7 +32,6 @@ class User(Base):
     name = Column(String, nullable=True)
     surname = Column(String, nullable=True)
 
-    messages = relationship("Message", back_populates="author", cascade="all, delete-orphan")
     votes = relationship("Vote", back_populates="voter", cascade="all, delete-orphan")  # Добавьте эту строку
 
 
