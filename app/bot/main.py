@@ -3,11 +3,20 @@ from app.bot.buttons import vote_button, threads_button
 from app.bot.handlers import handle_text_message, handle_photo_message
 from app.bot.commands import start, get_chat_info, command_select_topic, command_help
 import os
+import logging
 
 bot_token = os.getenv("BOT_TOKEN")
 
 
 def main() -> None:
+    # Configure root logger once at startup
+    logging.basicConfig(
+        level=os.getenv("LOG_LEVEL", "INFO"),
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    )
+
+    logger = logging.getLogger(__name__)
+    logger.info("Starting Telegram bot application")
     application = ApplicationBuilder().token(bot_token).build()
 
     application.add_handler(CommandHandler("start", start))

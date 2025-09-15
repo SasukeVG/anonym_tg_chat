@@ -1,5 +1,6 @@
 from telegram.ext import ContextTypes
 from telegram import Update, InputMediaPhoto
+import logging
 
 from sqlalchemy.future import select
 from sqlalchemy import func
@@ -11,12 +12,16 @@ from app.db.crud import (get_votes_and_text_by_message_id, update_positive_votes
                          update_negative_votes, has_user_voted, add_vote, add_user, get_threads_by_frequency)
 
 
+logger = logging.getLogger(__name__)
+
+
 async def vote_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
 
     message_id = query.message.message_id
     user_id = query.from_user.id
+    logger.info("callback vote_button | user_id=%s message_id=%s data=%s", user_id, message_id, query.data)
 
     async with get_db() as session:
         # Проверяем, существует ли пользователь с данным user_id
@@ -56,6 +61,7 @@ async def vote_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         else:
             new_text = f"Cообщение скрыто:\n||{text_message}||"
             await query.edit_message_text(text=new_text, parse_mode='MarkdownV2')
+        logger.debug("vote_button delete_text handled | user_id=%s message_id=%s neg=%s pos=%s", user_id, message_id, negative_votes, positive_votes)
 
     elif 'delete_photo' in query.data:
         if negative_votes < 2:
@@ -69,6 +75,7 @@ async def vote_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         else:
             # When negative votes reach 3, change the message to a text indicating removal
             await query.delete_message()
+        logger.debug("vote_button delete_photo handled | user_id=%s message_id=%s neg=%s pos=%s", user_id, message_id, negative_votes, positive_votes)
 
     elif 'keep' in query.data:
         if positive_votes < 2:
@@ -97,6 +104,7 @@ async def vote_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             else:
                 # Убираем кнопки у текста
                 await query.edit_message_text(text=text_message)
+        logger.debug("vote_button keep handled | user_id=%s message_id=%s neg=%s pos=%s", user_id, message_id, negative_votes, positive_votes)
 
 
 async def threads_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -106,6 +114,7 @@ async def threads_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data.split(":")
     action = data[0]
     value = data[1]
+    logger.info("callback threads_button | user_id=%s action=%s value=%s", query.from_user.id, action, value)
 
     if action == "select_thread":
         if value == "none":
@@ -123,3 +132,4 @@ async def threads_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             keyboard = create_pagination_keyboard(threads, current_page=page, total_pages=total_pages)
             await query.edit_message_reply_markup(reply_markup=keyboard)
+    logger.debug("threads_button handled | action=%s value=%s", action, value)
