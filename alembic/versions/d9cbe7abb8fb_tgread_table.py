@@ -28,9 +28,8 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_threads_id'), 'threads', ['id'], unique=False)
     op.create_index(op.f('ix_threads_thread_id'), 'threads', ['thread_id'], unique=True)
-    op.drop_index('ix_UserMessage_id', table_name='UserMessage', if_exists=True)
-    op.drop_index('ix_UserMessage_message_id', table_name='UserMessage', if_exists=True)
-    op.drop_table('UserMessage', if_exists=True)
+    # UserMessage может отсутствовать на новом сервере — удаляем только если есть
+    op.execute(sa.text('DROP TABLE IF EXISTS "UserMessage" CASCADE'))
     # ### end Alembic commands ###
 
 
