@@ -1,5 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes
+import logging
 from sqlalchemy import func
 from sqlalchemy.future import select
 
@@ -10,8 +11,12 @@ from app.db.crud import get_threads_by_frequency
 from app.bot.keyboards import create_pagination_keyboard
 
 
+logger = logging.getLogger(__name__)
+
+
 async def start_thread_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
+    logger.info("start_thread_selection | user_id=%s", user_id)
     async with get_db() as session:
         total_threads = await session.scalar(select(func.count(Thread.id)))
         total_pages = (total_threads + 4) // 5  # Рассчитываем количество страниц
@@ -23,6 +28,7 @@ async def start_thread_selection(update: Update, context: ContextTypes.DEFAULT_T
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.message.from_user
+    logger.info("command /start | user_id=%s", user.id)
 
     # Получаем сессию базы данных
     async with get_db() as session:
@@ -44,19 +50,23 @@ async def get_chat_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Вызов функции get_chat
         try:
+            logger.info("command /get_chat_info | chat_id=%s", chat_id)
             chat_info = await context.bot.get_chat(chat_id)
             await update.message.reply_text(f"Chat title: {chat_info}")
         except Exception as e:
+            logger.exception("get_chat_info_failed | chat_id=%s", chat_id)
             await update.message.reply_text(f"An error occurred: {e}")
     else:
         await update.message.reply_text("Please provide a chat ID as a parameter.")
 
 
 async def command_select_topic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.info("command /select_topic | user_id=%s", update.message.from_user.id)
     await start_thread_selection(update, context)
 
 
 async def command_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.info("command /help | user_id=%s", update.message.from_user.id)
     help_text = (
         "/start - Запуск бота и вывод приветственного сообщения.\n"
         "/select_topic - Выбор топика для отправки сообщения.\n"
